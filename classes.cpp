@@ -23,6 +23,7 @@ Score::Score(int student_id, int score) {
 
 School::School() {
     next_admit = 0;
+    enrollment_count = 0;
     scores = new Score[num_students];
 }
 
