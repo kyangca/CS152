@@ -1,0 +1,76 @@
+1. Data synthesis.
+Input: A number of students and schools
+Output: A text file containing data with randomized preferences.
+Functions:
+a. Allocate appropriate memory and data structures
+b. Randomly generate student preferences
+c. Randomly generate school's scores for students
+d. Takes current classes and outputs them into a text file
+
+e. A separate file with a main program that does 1-4 in sequence.
+
+We should be able to do (b) and (c) with various distributions. If time
+allows we can do a more realistic distribution such as giving each student
+and school a baseline score and measuring deviance from the baseline.
+
+2. Data parsing
+Input: A text file containing data with randomized preferences.
+Output: Classes as they were after (1d).
+
+3. Matching Algorithms:
+Input: An environment where all students/schools objects and preferences
+       have been defined. This can be either a result of running (1) or (2)
+Output: An environment where each student has been assigned to a school, and
+        each school has the appropriate enrollment count.
+        Also a text file containing the results of the matching. The file may
+        be something like:
+        school_id (final_threshold): student1, student2, ...
+        
+There should be a separate main program which will take as input a file,
+parse the file using (2), and write the contents to an output file.
+
+4. Data analysis:
+The privacy, stability, and school optimality conditions seem pretty
+uninteresting and straight-forward. The main result of the paper is that
+using differential privacy there is a bound x on the advantage that a student
+can gain by lieing regardless of all other student and school preferences,
+as well as the utility function of the student.
+
+The breadth of this result are too broad to test exhaustively. It would not
+only require multiple utility functions, but permuting every single possible
+set of school and student preferences is likely impossible to run. Instead one
+approach may to use random sampling. The assessment would go as follows:
+
+1. Generate a set of preferences
+2. For each student determine the maximum utility they can gain while fixing
+   all other variables. The difference between this and the utility they get
+   with their true preferences is what we care about. Take the maximum over
+   all such (max_utility - utility). For each student there are num_schools!
+   permutations of rankings, so there may be a comptuational bound on the
+   number of schools. Do this for both algorithms.
+3. For each student, generate a new set of preferences for every other student.
+   Check how much utility they can gain with these new, unthruthful
+   preferences. To do this, we would:
+   -Write down the original preferences of the studnets
+   -Run 1(b)
+   -For each of the original preferences, load them for that student. Find
+    the maximum utility in the new environment, then load the new synthetic
+    preferences back
+    
+4. Do (3) several thousand times, or however many is computationally feasible,
+   and take the maximum "advantage" over all trials. Verify that the private
+   algorithm matches the bound, and compare it to the bound of the non-private
+   algorithm.
+   
+5. Start over by generating new preferences with 1(b) and 1(c)
+
+Overall this will basically fix a set of school preferences, since the
+algorithm is school-optimal anyway. It then measures how much incentive
+there is for the students to lie. We cannot exhaustively search for how well
+students can do if they collude, but we can get a good idea by randomly
+sampling many points. This also simulates reality decently because students
+are usually not going to have a good idea of how other people are choosing
+their ratings.
+
+There are probably other beneficial tests that we can do if somebody thinks
+of them.

@@ -5,6 +5,8 @@ class Student;
 class Score;
 class School;
 
+extern float alpha;
+
 extern int num_students;
 extern int num_schools;
 
@@ -25,6 +27,12 @@ public:
     // Constructor/destructor
     Student();
     ~Student();
+    
+    // Returns the maximum utility that a student can get while fixing all
+    // other preferences. The first argument is the matching algorithm and
+    // the second argument is a utility function. The utility function should
+    // have range [0, 1] and be strictly decreasing with rank.
+    float max_utility(void (*)(), float(*)(int));
 };
 
 // We could represent student scores as an array where the ith index is the
@@ -59,8 +67,8 @@ public:
     
     // When the threshold lowers below a student's score, the school proposes.
     // This may differ between the private and non-private algorithms.
-    void propose(Student &student);
-    void send_proposals();
+    //void propose_nonprivate(Student &student);
+    //void send_proposals_nonprivate();
 };
 
 #endif
