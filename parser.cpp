@@ -13,6 +13,67 @@ int num_schools;
 Student *students;
 School *schools;
 
+void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
+{
+    schools = new School[num_schools];
+    // Randomly generate num_schools number of schools
+    for(int i = 0; i < num_schools; i++)
+    {
+        School current;
+        current.school_id = i;
+        // Generate a random capacity for between 1 and total number of students, drawn from
+        // cdistr.
+        current.capacity = cdistr();
+        int maxscore = -1;
+        for(int j = 0; j < num_students; j++)
+        {
+            // Assign each student a score drawn from sdistr.
+            int s = sdistr();
+            // Tentatively put this score at the end of the list
+            current.scores[j] = Score(j, s);
+            int k = j;
+            // "Bubble" the score to its proper place in the list
+            //  Yeah, yeah, it's inefficient, but it's also simple to write.
+            // And right now, I'm looking to get a functional implementation up fast.
+            while(k > 0 && current.scores[k].score > current.scores[k - 1].score)
+            {
+                Score temp = current.scores[k];
+                current.scores[k] = current.scores[k - 1];
+                current.scores[k - 1] = temp;
+                k--;
+            }
+            if(s >= maxscore)
+            {
+                maxscore = s;
+            }
+        }
+        // Set initial threshold to the max of all the scores this school has
+        // given to students.
+        current.threshold = maxscore;
+        schools[i] = current;
+    }
+}
+
+void gen_students(void)
+{
+    students = new Student[num_students];
+    // Randomly generate num_students number of students
+    for(int i = 0; i < num_students; i++)
+    {
+        Student current;
+        current.student_id = i;
+        // Create a sorted list (1, 2, ..., num_schools)
+        int *pref = new int[num_schools];
+        for(int j = 0; j < num_schools; j++)
+        {
+            pref[j] = j + 1;
+        }
+        // Permute it to get this student's rankings of the available schools.
+        random_shuffle(pref, pref + num_schools);
+        current.preferences = pref;
+    }
+}
+
 void parse_data(char const *filename) {
     num_students = 4;
     num_schools = 2;
@@ -69,6 +130,31 @@ void parse_data(char const *filename) {
     sch->scores[3].score = 15;
 }
 
+void write_schools_and_students(char const *filename)
+{
+    ofstream outfile;
+    outfile.open(filename, ios::out);
+    // Start by writing the number of students, then the number of 
+    // schools to the start of the file
+    outfile << num_students << endl;
+    outfile << num_schools << endl;
+    for(int i = 0; i < num_students; i++)
+    {
+        Student current = students[i];
+        outfile << current.student_id << ": ";
+        for(int j = 0; j < num_schools - 1; j++)
+        {
+            cout << "TODO" << endl;
+        }
+    }
+    for(int i = 0; i < num_schools; i++)
+    {
+        School current = schools[i];
+        outfile << current.school_id << ": " << current.capacity << ", " << current.threshold << ", ";
+        
+    }
+    outfile.close();
+}
 
 // We need to group up all the students for each school, We could do this
 // most quickly with a hash table or a series of linked lists, but since
