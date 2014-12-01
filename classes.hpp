@@ -1,6 +1,7 @@
 #ifndef __CLASSES_INCLUDED__   // if x.h hasn't been included yet...
 #define __CLASSES_INCLUDED__ 
 
+
 class Student;
 class Score;
 class School;
@@ -13,14 +14,14 @@ extern int num_schools;
 extern Student *students;
 extern School *schools;
 
-class Student { 
+class Student {
 public:
     // Integer identifier with domain 0 through num_students-1;
     int student_id;
     // school_id of school student is currently going to attend.
     // Defaults to -1.
     int current_school;
-    // An array with num_students entries. Entry i is the ranking that the
+    // An array with num_students entries. Entry ic is the ranking that the
     // student gives to school i
     int *preferences;
     
@@ -49,14 +50,33 @@ public:
     bool operator<(const Score &other) const;
 };
 
+
+class Counter {
+    float count;
+    float e;
+    int T;
+    int t;
+    int *a;
+    int *ahat;
+public:
+    Counter();
+    ~Counter();
+    void init(float epsilon, int Time);
+    void send(float val);
+    float get_count();
+};
+
 class School {
 public:
     // Integer identifier with domain 0 through num_schools-1.
     int school_id;
     // Maximum enrollment count
     int capacity;
+    float effective_capacity;
     // Current enrollment count
     int enrollment_count;
+    // Private enrollment counter
+    Counter private_counter;
     int threshold;
     // The index of the next student that might surpass the threshold.
     // Defaults to 0.
