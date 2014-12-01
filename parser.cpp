@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include "classes.hpp"
 #include "parser.hpp"
@@ -75,61 +76,96 @@ void gen_students(void)
 }
 
 void parse_data(char const *filename) {
-    num_students = 4;
-    num_schools = 2;
+    int i, j, student_id, school_id;
+    ifstream infile;
+    string line, cell;
+    stringstream line_stream;
+    
+    infile.open(filename, ios::in);
+    // First two lines are the number of students and schools
+    getline(infile, line);
+    num_students = atoi(line.c_str());
+    getline(infile, line);
+    num_schools = atoi(line.c_str());
+    
+    getline(infile, line);
+    if (line != "students:") {
+        cout << "Error: expected but did not find line \"students\"." << endl;
+        exit(1);
+    }
     students = new Student[num_students];
     schools = new School[num_schools];
     
-    Student *stu;
-    School *sch;
+    for (i = 0; i < num_students; i++) {
+        getline(infile, line);
+        line_stream.str(line);
+        line_stream.clear();
+        getline(line_stream, cell, ':');
+        student_id = atoi(cell.c_str());
+        if (student_id != i) {
+            cout << "Error: expected student id " << i << " but found " << student_id << endl;
+            exit(1);
+        }
+        students[i].student_id = i;
+        students[i].preferences = new int[num_schools];
+        for (j = 0; j < num_schools; j++) {
+            if (not getline(line_stream, cell, ',')) {
+                cout << "Error: student " << i << " has too few rankings." << endl;
+                exit(1);
+            }
+            
+            school_id = atoi(cell.c_str());
+            
+            if (students[i].preferences[school_id] != 0) {
+                cout << "Error: student " << i << " has invalid school_id " << school_id << endl;
+                exit(1);
+            }
+            
+            students[i].preferences[school_id] = j + 1;
+        }
+        if (getline(line_stream, cell, '.')) {
+            cout << "Error: student " << i << " has too many preferences." << endl;
+            exit(1);
+        }
+    }
+        
+    getline(infile, line);
+    if (line != "schools:") {
+        cout << "Error: expected but did not find line \"schools\"." << endl;
+    }
     
-    stu = &students[0];
-    stu->student_id = 0;
-    stu->preferences[0] = 1;
-    stu->preferences[1] = 2;
+    for (i = 0; i < num_schools; i++) {
+        getline(infile, line);
+        line_stream.str(line);
+        line_stream.clear();
+        getline(line_stream, cell, ':');
+        school_id = atoi(cell.c_str());
+        if (school_id != i) {
+            cout << "Error: expected school id " << i << " but found "
+                 << school_id << endl;
+            exit(1);
+        }
+        schools[i].school_id = i;
+        getline(line_stream, cell, ':');
+        schools[i].capacity = atoi(cell.c_str());
+        schools[i].scores = new Score[num_students];
+        for (j = 0; j < num_students; j++) {
+            if (not getline(line_stream, cell, ',')) {
+                cout << "Error: school " << i << " has too few scores." << endl;
+                exit(1);
+            }
+            schools[i].scores[j] = Score(j, atoi(cell.c_str()));
+        }
+        if (getline(line_stream, cell, '.')) {
+            cout << "Error: school " << i << " has too many scores." << endl;
+            exit(1);
+        }
+        sort(schools[i].scores, schools[i].scores+num_students);
+    }
     
-    stu = &students[1];
-    stu->student_id = 1;
-    stu->preferences[0] = 2;
-    stu->preferences[1] = 1;
-    
-    stu = &students[2];
-    stu->student_id = 2;
-    stu->preferences[0] = 1;
-    stu->preferences[1] = 2;
-    
-    stu = &students[3];
-    stu->student_id = 2;
-    stu->preferences[0] = 2;
-    stu->preferences[1] = 1;
-    
-    sch = &schools[0];
-    sch->school_id = 0;
-    sch->capacity = 2;
-    sch->threshold = 60;
-    sch->scores[0].student_id = 1;
-    sch->scores[0].score = 60;
-    sch->scores[1].student_id = 3;
-    sch->scores[1].score = 50;
-    sch->scores[2].student_id = 2;
-    sch->scores[2].score = 40;
-    sch->scores[3].student_id = 0;
-    sch->scores[3].score = 30;
-
-    sch = &schools[1];
-    sch->school_id = 1;
-    sch->capacity = 2;
-    sch->threshold = 45;
-    sch->scores[0].student_id = 0;
-    sch->scores[0].score = 45;
-    sch->scores[1].student_id = 2;
-    sch->scores[1].score = 35;
-    sch->scores[2].student_id = 1;
-    sch->scores[2].score = 25;
-    sch->scores[3].student_id = 3;
-    sch->scores[3].score = 15;
+    infile.close();
 }
-
+  
 void write_schools_and_students(char const *filename)
 {
     ofstream outfile;

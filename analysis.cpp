@@ -118,6 +118,25 @@ int main(int argc, char *argv[], char *envp[]) {
     }
     input_file = argv[1];
     parse_data(input_file);
+    
+    /*
+    for (int i = 0; i < num_students; i++) {
+        for (int j = 0; j < num_schools; j++) {
+            cout << students[i].preferences[j] << endl;
+        }
+        cout << endl;
+    }
+    cout << endl;
+    for (int i = 0; i < num_schools; i++) {
+        cout << schools[i].capacity << endl;
+        for (int j = 0; j < num_students; j++) {
+            cout << schools[i].scores[j].student_id << endl;
+            cout << schools[i].scores[j].score << endl;
+            
+        }
+        cout << endl;
+    }
+    */
     non_private_da_school();
     write_matching_output("output.txt");
 

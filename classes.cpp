@@ -22,6 +22,12 @@ Score::Score(int student_id, int score) {
     this->score = score;
 }
 
+// We define this in reverse so that the sort function will sort it in
+// descending order.
+bool Score::operator<(const Score &other) const {
+    return score > other.score;
+}
+
 
 School::School() {
     next_admit = 0;

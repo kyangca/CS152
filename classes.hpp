@@ -45,6 +45,8 @@ public:
     // Constructors
     Score();
     Score(int student_id, int score);
+    
+    bool operator<(const Score &other) const;
 };
 
 class School {
