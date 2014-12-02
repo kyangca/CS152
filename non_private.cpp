@@ -38,7 +38,7 @@ bool do_iter() {
     bool done = true;
     for (int i = 0; i < num_schools; i++) {
         if (schools[i].threshold > 0 &&
-            schools[i].enrollment_count <= (1 - alpha) * schools[i].capacity) {
+            schools[i].enrollment_count < (1 - alpha) * schools[i].capacity) {
             
             done = false;
             schools[i].threshold--;

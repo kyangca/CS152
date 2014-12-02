@@ -115,4 +115,8 @@ float Counter::get_count() {
     return count;
 }
 
+void Counter::reset_count() {
+    count = 0;
+}
+
 

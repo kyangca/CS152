@@ -8,15 +8,36 @@
 
 using namespace std;
 
-int num_students;
-int num_schools;
+int num_students = -1;
+int num_schools = -1;
+int max_score;
 
-Student *students;
-School *schools;
+Student *students = NULL;
+School *schools = NULL;
+
+void allocate_students() {
+    if (num_students == -1) {
+        cout << "Need to set the number of students before allocation." << endl;
+        exit(1);
+    }
+    if (students == NULL) {
+        students = new Student[num_students];
+    }
+}
+
+void allocate_schools() {
+    if (num_students == -1) {
+        cout << "Need to set the number of schools before allocation." << endl;
+        exit(1);
+    }
+    if (schools == NULL) {
+        schools = new School[num_schools];
+    }
+}
 
 void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
 {
-    schools = new School[num_schools];
+    allocate_schools();
     // Randomly generate num_schools number of schools
     for(int i = 0; i < num_schools; i++)
     {
@@ -57,7 +78,7 @@ void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
 
 void gen_students(void)
 {
-    students = new Student[num_students];
+    allocate_students();
     // Randomly generate num_students number of students
     for(int i = 0; i < num_students; i++)
     {
@@ -75,8 +96,24 @@ void gen_students(void)
     }
 }
 
+// Between running matching algorithms, this should be called to reset the
+// class fields to their initial states.
+void reset_state() {
+    int i;
+    for (i = 0; i < num_students; i++) {
+        students[i].current_school = -1;
+    }
+    for (i = 0; i < num_schools; i++) {
+        schools[i].threshold = max_score;
+        schools[i].next_admit = 0;
+        schools[i].enrollment_count = 0;
+        schools[i].private_counter.reset_count();
+    }
+}
+    
+
 void parse_data(char const *filename) {
-    int i, j, student_id, school_id;
+    int i, j, student_id, school_id, score;
     ifstream infile;
     string line, cell;
     stringstream line_stream;
@@ -93,8 +130,9 @@ void parse_data(char const *filename) {
         cout << "Error: expected but did not find line \"students\"." << endl;
         exit(1);
     }
-    students = new Student[num_students];
-    schools = new School[num_schools];
+    
+    allocate_students();
+    allocate_schools();
     
     for (i = 0; i < num_students; i++) {
         getline(infile, line);
@@ -134,6 +172,7 @@ void parse_data(char const *filename) {
         cout << "Error: expected but did not find line \"schools\"." << endl;
     }
     
+    max_score = 0;
     for (i = 0; i < num_schools; i++) {
         getline(infile, line);
         line_stream.str(line);
@@ -154,13 +193,19 @@ void parse_data(char const *filename) {
                 cout << "Error: school " << i << " has too few scores." << endl;
                 exit(1);
             }
-            schools[i].scores[j] = Score(j, atoi(cell.c_str()));
+            score = atoi(cell.c_str());
+            max_score = max(score, max_score);
+            schools[i].scores[j] = Score(j, score);
         }
         if (getline(line_stream, cell, '.')) {
             cout << "Error: school " << i << " has too many scores." << endl;
             exit(1);
         }
         sort(schools[i].scores, schools[i].scores+num_students);
+    }
+    
+    for (i = 0; i < num_schools; i++) {
+        schools[i].threshold = max_score;
     }
     
     infile.close();
@@ -217,9 +262,9 @@ void write_matching_output(char const *filename) {
             cout << "Error: enrollment inconsistency." << endl;
             exit(1);
         }
-        outfile << i << " (" << schools[i].threshold << "): " << student_ids[0];
+        outfile << i << "(" << schools[i].threshold << "):" << student_ids[0];
         for (k = 1; k < schools[i].enrollment_count; k++) {
-            outfile << ", " << student_ids[k];
+            outfile << "," << student_ids[k];
         }
         outfile << endl;
         delete[] student_ids;

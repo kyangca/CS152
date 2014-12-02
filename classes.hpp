@@ -5,11 +5,13 @@
 class Student;
 class Score;
 class School;
+class Counter;
 
 extern float alpha;
 
 extern int num_students;
 extern int num_schools;
+extern int max_score;
 
 extern Student *students;
 extern School *schools;
@@ -21,7 +23,7 @@ public:
     // school_id of school student is currently going to attend.
     // Defaults to -1.
     int current_school;
-    // An array with num_students entries. Entry ic is the ranking that the
+    // An array with num_students entries. Entry i is the ranking that the
     // student gives to school i
     int *preferences;
     
@@ -64,6 +66,7 @@ public:
     void init(float epsilon, int Time);
     void send(float val);
     float get_count();
+    void reset_count();
 };
 
 class School {
@@ -86,11 +89,6 @@ public:
     // Constructor/destructor
     School();
     ~School();
-    
-    // When the threshold lowers below a student's score, the school proposes.
-    // This may differ between the private and non-private algorithms.
-    //void propose_nonprivate(Student &student);
-    //void send_proposals_nonprivate();
 };
 
 #endif

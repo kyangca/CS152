@@ -29,4 +29,4 @@ analysis.o: analysis.cpp classes.hpp parser.hpp non_private.hpp
 	$(CC) $(CFLAGS) -c analysis.cpp
 
 clean:
-	rm -f *.o *~ non_private analyze
+	rm -f *.o *~ non_private private analysis
