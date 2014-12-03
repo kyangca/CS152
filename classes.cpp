@@ -1,5 +1,6 @@
 #include <math.h>
-#include <assert.h>
+#include <iostream>
+#include <cassert>
 #include <stdlib.h>
 #include "classes.hpp"
 
@@ -62,61 +63,104 @@ float lap(float b) {
     return log(x / y);
 }
 
+Counter::Counter(float epsilon, int length) {
+//    cout << "initializing counter" << endl;
+    this->epsilon = epsilon;
+    this->length = length;
+    time = 0;
+    int T = (int)ceil(log2(length));
+    partial_sums = new int[T];
+    noisy_partial_sums = new int[T];
+    for (int j = 0; j < T; j++) {
+//        cout << "zeroing sum[" << j << "]" << endl;
+        partial_sums[j] = 0;
+	noisy_partial_sums[j] = 0;
+    }
+}
+
 Counter::Counter() {
-    count = 0;
-    e = 0;
-    T = 0;
-    t = 0;
+    epsilon = 0;
+    length = 0;
+    time = 0;
+    partial_sums = NULL;
+    noisy_partial_sums = NULL;
 }
 
 Counter::~Counter() {
-    delete[] this->a;
-    delete[] this->ahat;
+    delete[] partial_sums;
+    delete[] noisy_partial_sums;
 }
 
-void Counter::init(float epsilon, int Time) {
-    this->count = 0;
-    this->e = epsilon;
-    this->T = Time;
-    this->t = 0;
-    this->a = new int[(int)ceil(log2(T))];
-    this->ahat = new int[(int)ceil(log2(T))];
-    for (int j = 0; j < ceil(log2(T)); j++) {
-	a[j] = 0;
-	assert(a[j] == 0);
-	ahat[j] = 0;
-	assert(ahat[j] == 0);
+Counter & Counter::operator=(const Counter &c) {
+    if (this != &c) {
+//        cout << "assigning" << endl;
+        delete[] partial_sums;
+        delete[] noisy_partial_sums;
+        epsilon = c.epsilon;
+        length = c.length;
+        time = c.time;
+        int T = (int)ceil(log2(length));
+        partial_sums = new int[T];
+        noisy_partial_sums = new int[T];
+        for (int j = 0; j < T; j++) {
+            partial_sums[j] = c.partial_sums[j];
+            noisy_partial_sums[j] = c.noisy_partial_sums[j];
+        }
+    }
+    return *this;
+}
+
+void Counter::print() {
+    for (int j = 0; j < ceil(log2(length)); j++) {
+//        cout << "sum " << j << ": " << partial_sums[j]
+//             << ", noisy sum: " << noisy_partial_sums[j] << endl;
     }
 }
 
 void Counter::send(float val) {
-    t++;
-    int i = get_least_bit(t);
+    assert(time < length);
+    assert(partial_sums != NULL);
+    assert(noisy_partial_sums != NULL);
+    time++;
+//    cout << "sending " << val << " at time " << time << ": ";
+//    cout << "before: " << get_count() << ", ";
+//    cout << "time " << time << endl;
+//    cout << "partial_sum " << partial_sums[0] << endl;
+    int i = get_least_bit(time);
+//    cout << "least bit: " << i << endl;
     for (int j = 0; j < i; j++) {
-	a[i] += a[j];
-	a[j] = 0;
-	ahat[j] = 0;
+//        cout << "setting bit j: " << j << endl;
+	partial_sums[i] += partial_sums[j];
+	partial_sums[j] = 0;
+	noisy_partial_sums[j] = 0;
     }
-    a[i] += val;
-    ahat[i] = a[i] + lap(log(T)/e);
-    float sum = 0;
-    int num = t;
-    int j = 0;
-    while (num) {
-	if (num & 1) {
-	    sum += ahat[j];
-	}
-	num >>= 1;
-	i++;
-    }
+//    cout << "partial sum i: " << partial_sums[i] << endl;
+//    cout << "adding val: " << val << endl;
+    partial_sums[i] += val;
+    noisy_partial_sums[i] = partial_sums[i];
+// + lap(log2(length)/epsilon);
+//    cout << "noisy sum " << noisy_partial_sums[i] << endl;
+//    cout << "after: " << get_count() << endl;
 }
 
 float Counter::get_count() {
-    return count;
+//    cout << "getting count" << endl;
+//    cout << "  partial sum: " << partial_sums[0] << endl;
+    float sum = 0;
+    int num = time;
+    int j = 0;
+    while (num) {
+        assert(j < ceil(log2(length)));
+	if (num & 1) {
+	    sum += noisy_partial_sums[j];
+	}
+	num >>= 1;
+	j++;
+    }
+    return sum;
 }
 
 void Counter::reset_count() {
-    count = 0;
 }
 
 

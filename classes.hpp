@@ -54,19 +54,21 @@ public:
 
 
 class Counter {
-    float count;
-    float e;
-    int T;
-    int t;
-    int *a;
-    int *ahat;
 public:
+    float epsilon;
+    int length;
+    int time;
+    int *partial_sums;
+    int *noisy_partial_sums;
+
     Counter();
+    Counter(float epsilon, int length);
     ~Counter();
-    void init(float epsilon, int Time);
+    Counter & operator=(const Counter &c);
     void send(float val);
     float get_count();
     void reset_count();
+    void print();
 };
 
 class School {
@@ -75,11 +77,11 @@ public:
     int school_id;
     // Maximum enrollment count
     int capacity;
-    float effective_capacity;
+    float private_capacity;
     // Current enrollment count
     int enrollment_count;
-    // Private enrollment counter
-    Counter private_counter;
+    // Private enrollment count
+    Counter private_count;
     int threshold;
     // The index of the next student that might surpass the threshold.
     // Defaults to 0.

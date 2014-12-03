@@ -1,5 +1,7 @@
 CC = g++
-CFLAGS = -Wall
+CFLAGS = -Wall -g
+
+all: private non_private
 
 private: private.o classes.o parser.o
 	$(CC) $(CFLAGS) -o private private.o classes.o parser.o

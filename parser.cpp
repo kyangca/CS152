@@ -107,7 +107,7 @@ void reset_state() {
         schools[i].threshold = max_score;
         schools[i].next_admit = 0;
         schools[i].enrollment_count = 0;
-        schools[i].private_counter.reset_count();
+//        schools[i].private_counter.reset_count();
     }
 }
     
