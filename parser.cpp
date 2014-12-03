@@ -271,3 +271,29 @@ void write_matching_output(char const *filename) {
     }
     outfile.close();
 }
+
+void write_private_matching_output(char const *filename) {
+
+    ofstream outfile;
+    outfile.open(filename, ios::out);
+    for (int j = 0; j < num_schools; j++) {
+        int student_count = 0;
+        for (int i = 0; i < num_students; i++) {
+            if (students[i].current_school == schools[j].school_id) {
+                student_count++;
+                if (student_count == 1) {
+                    outfile << j << "(" << schools[j].threshold << "):";
+                }
+                if (student_count > 1) {
+                    outfile << ",";
+                }
+                outfile << i;
+            }
+        }
+        if (student_count > 0) {
+            outfile << endl;
+        }
+
+    }
+    outfile.close();
+}

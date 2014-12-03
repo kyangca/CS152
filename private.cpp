@@ -43,10 +43,11 @@ int main(int argc, char *argv[]) {
 	output_file = "output.txt";
     }
     parse_data(input_file);
+    // TODO: take these as input?
     float epsilon = .01;
     float delta = .01;
     private_da_school(epsilon, delta);
-    write_matching_output(output_file);
+    write_private_matching_output(output_file);
     cout << "Done!" << endl;
 }
 
