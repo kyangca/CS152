@@ -36,7 +36,7 @@ public:
     // other preferences. The first argument is the matching algorithm and
     // the second argument is a utility function. The utility function should
     // have range [0, 1] and be strictly decreasing with rank.
-    float max_utility(void (*)(), float(*)(int));
+    float max_utility(void (*)(), float(*)(Student&));
 };
 
 // We could represent student scores as an array where the ith index is the

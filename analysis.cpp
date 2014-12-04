@@ -10,9 +10,36 @@
 
 using namespace std;
 
+int **true_preferences = NULL;
+
+
 // The uniform utility function, with utility proportional to rank
-float utility_uniform(int rank) {
-    return float(num_schools - rank)/(num_schools-1);
+float utility_uniform(Student &student) {
+    if (student.current_school == -1) {
+        return 0;
+    }
+    return float(num_schools - true_preferences[student.student_id][student.current_school])/(num_schools-1);
+}
+
+// Saves all student preferences into a backup array so we can easily access
+// them while altering the preferences for the sake of the algorithm.
+void copy_preferences() {
+    if (true_preferences == NULL) {
+        true_preferences = new int*[num_students];
+        for (int i = 0; i < num_students; i++) {
+            true_preferences[i] = new int[num_schools];
+        }
+    }
+    for (int i = 0; i < num_students; i++) {
+        memcpy(true_preferences[i], students[i].preferences, sizeof(int)*num_schools);
+    }
+}
+
+void deallocate_true_preferences() {
+    for (int i = 0; i < num_students; i++) {
+        delete[] true_preferences[i];
+    }
+    delete[] true_preferences;
 }
 
 void verify_results() {
@@ -77,39 +104,80 @@ void verify_results() {
 // Computes the maximum utility that can be acquired by the student while
 // fixing all other preferences, given that the input algorithm is being
 // used for matching
-float Student::max_utility(void (*matching_algorithm)(), float (*utility)(int)) {
+float Student::max_utility(void (*matching_algorithm)(), float (*utility)(Student&)) {
     float max_utility = 0.0;
-    int *true_preferences = new int[num_schools];
-    memcpy(true_preferences, preferences, sizeof(int)*num_schools);
+    int *original_preferences = new int[num_schools];
+    memcpy(original_preferences, preferences, sizeof(int)*num_schools);
     sort(preferences, preferences+num_schools);
     do {
         reset_state();
         matching_algorithm();
-        max_utility = max(utility(true_preferences[current_school]), max_utility);
+        max_utility = max(utility(*this), max_utility);
+        
     } while (next_permutation(preferences, preferences+num_schools));
-    memcpy(preferences, true_preferences, sizeof(int)*num_schools);
-    delete[] true_preferences;
+    memcpy(preferences, original_preferences, sizeof(int)*num_schools);
+    delete[] original_preferences;
     return max_utility;
 }
 
 // Given the current set of preferences, finds the largest advantage that
 // any student could get by lieing.
-float max_utility_advantage(void (*matching_algorithm)(), float (*utility)(int)) {
-    int i;
+float max_utility_advantage(void (*matching_algorithm)(), float (*utility)(Student&)) {
     float max_advantage = 0.0;
     float *true_utilities = new float[num_students];
-    for (i = 0; i < num_students; i++) {
-        true_utilities[i] = utility(students[i].preferences[students[i].current_school]);
+    for (int i = 0; i < num_students; i++) {
+        true_utilities[i] = utility(students[i]);
     }
-    for (i = 0; i < num_students; i++) {
+    
+    for (int i = 0; i < num_students; i++) {
         max_advantage = max(max_advantage,
                             students[i].max_utility(matching_algorithm, utility) -
                             true_utilities[i]);
     }
-    delete[] true_utilities;
     return max_advantage;
 }
 
+// This function takes a number of students and number of iterations. It
+// randomly selects num_students students. Then it repeatedly generates
+// new student preferences and determines the maximum advantage that any
+// one can gain by lieing in any of the sampled preferences.
+float max_random_sampling(void (*matching_algorithm)(), float (*utility)(Student&),
+                          int samp_size, int num_iter) {
+    samp_size = min(samp_size, num_students);
+    // Get a random sample of students
+    int *sample = new int[samp_size];
+    int *permute = new int[num_students];
+    for (int i = 0; i < num_students; i++) {
+        permute[i] = i;
+    }
+    random_shuffle(permute, permute + num_students);
+    memcpy(sample, permute, sizeof(int)*samp_size);
+    delete[] permute;
+    
+    float max_advantage = 0.0;
+    int *original_preferences = new int[num_schools];
+    // For each iteration...
+    for (int i = 0; i < num_iter; i++) {
+        // Generate a new sample of student preferences
+        gen_students();
+        
+        // For each student in the sample
+        for (int j = 0; j < samp_size; j++) {
+            // Save their preferences from this set and load their true ones
+            memcpy(original_preferences, students[sample[j]].preferences, sizeof(int)*num_schools);
+            memcpy(students[sample[j]].preferences, true_preferences[sample[j]], sizeof(int)*num_schools);
+            // Get their truthful utility
+            reset_state();
+            matching_algorithm();
+            float true_utility = utility(students[sample[j]]);
+            // Now find the largest advantage for this student
+            max_advantage = max(max_advantage, students[sample[j]].max_utility(matching_algorithm, utility) - true_utility);
+            // Return the student's preferences back to normal
+            memcpy(students[sample[j]].preferences, original_preferences, sizeof(int)*num_schools);
+        }
+    }
+    return max_advantage;
+}
 
 int main(int argc, char *argv[], char *envp[]) {
     char const *input_file;
@@ -121,5 +189,9 @@ int main(int argc, char *argv[], char *envp[]) {
     parse_data(input_file);
     non_private_da_school();
     write_matching_output("output.txt");
-    cout << "Max: " << max_utility_advantage(&non_private_da_school, &utility_uniform) << endl;
+    copy_preferences();
+    //cout << "Max: " << max_utility_advantage(&non_private_da_school, &utility_uniform) << endl;
+    cout << "Max: " << max_random_sampling(&non_private_da_school, &utility_uniform, 1000, 100) << endl;
+    deallocate_true_preferences();
+    free_memory();
 }

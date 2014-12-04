@@ -6,7 +6,7 @@
 
 using namespace std;
 
-float alpha = 0.0;
+float alpha = 0.25;
 
 // Constructor
 Student::Student() {

@@ -4,18 +4,6 @@
 
 using namespace std;
 
-int capacity_rand(void)
-{
-    //srand(time(0));
-    return (rand() % num_students) + 1;
-}
-
-int score_rand(void)
-{
-    //srand(time(0));
-    return (rand() % 100) + 1;
-}
-
 int main(int argc, char **argv)
 {
     if(argc != 4)
@@ -28,7 +16,8 @@ int main(int argc, char **argv)
     num_students = atoi(argv[2]);
     char *outname = argv[3];
     gen_students();
-    gen_schools(&capacity_rand, &score_rand);
+    gen_schools(&capacity_uniform, &score_uniform);
     write_schools_and_students(outname);
+    free_memory();
     return 0;
 }

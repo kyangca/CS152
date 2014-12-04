@@ -24,4 +24,5 @@ int main(int argc, char *argv[]) {
     non_private_da_school();
     write_matching_output(output_file);
     cout << "Done!" << endl;
+    free_memory();
 }

@@ -15,6 +15,18 @@ int max_score;
 Student *students = NULL;
 School *schools = NULL;
 
+// CAPACITY DISTRIBUTIONS
+ 
+int capacity_uniform(void) {
+    return (rand() % num_students) + 1;
+}
+
+// SCORE DISTRIBUTIONS
+
+int score_uniform(void) {
+    return (rand() % 100) + 1;
+}
+
 void allocate_students() {
     if (num_students == -1) {
         cout << "Need to set the number of students before allocation." << endl;
@@ -35,6 +47,11 @@ void allocate_schools() {
     }
 }
 
+void free_memory() {
+    delete[] students;
+    delete[] schools;
+}
+
 void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
 {
     allocate_schools();
@@ -47,35 +64,22 @@ void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
         // cdistr.
         schools[i].capacity = cdistr();
         int maxscore = -1;
-        cout << "Generating scores for students..." << endl;
+        //cout << "Generating scores for students..." << endl;
         for(int j = 0; j < num_students; j++)
         {
             // Assign each student a score drawn from sdistr.
             int s = sdistr();
             // Tentatively put this score at the end of the list
             schools[i].scores[j] = Score(j, s);
-            cout << "For school " << schools[i].school_id << " and student " << j << ", generated " << s <<".\n";
-            int k = j;
-            // "Bubble" the score to its proper place in the list
-            //  Yeah, yeah, it's inefficient, but it's also simple to write.
-            // And right now, I'm looking to get a functional implementation up fast.
-            while(k > 0 && schools[i].scores[k].score > schools[i].scores[k - 1].score)
-            {
-                Score temp = schools[i].scores[k];
-                schools[i].scores[k] = schools[i].scores[k - 1];
-                schools[i].scores[k - 1] = temp;
-                k--;
-            }
-            if(s >= maxscore)
-            {
-                maxscore = s;
-            }
+            //cout << "For school " << schools[i].school_id << " and student " << j << ", generated " << s <<".\n";
+            sort(schools[i].scores, schools[i].scores + num_students);
+            maxscore = max(s, maxscore);
         }
         // Set initial threshold to the max of all the scores this school has
         // given to students.
         schools[i].threshold = maxscore;
         //schools[i] = current;
-        cout << "Capacity is: " << schools[i].capacity << endl;
+        //cout << "Capacity is: " << schools[i].capacity << endl;
     }
 }
 
@@ -88,21 +92,18 @@ void gen_students(void)
         //Student current;
         students[i].student_id = i;
         // Create a sorted list (1, 2, ..., num_schools)
-        int *pref = new int[num_schools];
         for(int j = 0; j < num_schools; j++)
         {
-            pref[j] = j + 1;
+            students[i].preferences[j] = j + 1;
         }
         // Permute it to get this student's rankings of the available schools.
-        random_shuffle(pref, pref + num_schools);
-        students[i].preferences = pref;
-        //students[i] = current;
-        cout << "School preferences for: " << students[i].student_id << endl;
+        random_shuffle(students[i].preferences, students[i].preferences + num_schools);
+        //cout << "School preferences for: " << students[i].student_id << endl;
         for(int k = 0; k < num_schools; k++)
         {
-            cout << students[i].preferences[k] << ", ";
+            //cout << students[i].preferences[k] << ", ";
         }
-        cout << endl;
+        //cout << endl;
     }
 }
 
@@ -155,10 +156,8 @@ void parse_data(char const *filename) {
             exit(1);
         }
         students[i].student_id = i;
-        students[i].preferences = new int[num_schools];
-        for (j = 0; j < num_schools; j++) {
-            students[i].preferences[j] = 0;
-        }
+        students[i].preferences = new int[num_schools]();
+        
         for (j = 0; j < num_schools; j++) {
             if (not getline(line_stream, cell, ',')) {
                 cout << "Error: student " << i << " has too few rankings." << endl;
@@ -233,56 +232,24 @@ void write_schools_and_students(char const *filename)
     outfile << num_students << endl;
     outfile << num_schools << endl;
     outfile << "students:" << endl;
-    cout << "Beginning writing students..." << endl;
+    int *temp = new int[num_schools];
     for(int i = 0; i < num_students; i++)
     {
-        //Student current = students[i];
-        // Make a temporary copy of the preferences
-        int *temp = (int *)calloc(num_schools, sizeof(int));
-        for(int k = 0; k < num_schools; k++)
-        {
-            temp[k] = students[i].preferences[k];
+        Student current = students[i];
+        for (int k = 0; k < num_schools; k++) {
+            temp[students[i].preferences[k]-1] = k;
         }
-        cout << "Temp preferences for student: " << students[i].student_id << " is... ";
-        for(int k = 0; k < num_schools; k++)
-        {
-            cout << temp[k] << ", ";
+        outfile << current.student_id << ":";
+        outfile << temp[0];
+        for (int k = 1; k < num_schools; k++) {
+            outfile << "," << temp[k];
         }
-        cout << endl;
-        outfile << students[i].student_id << ":";
-        // Do num_school passes through the list of this student's preferences
-        // Each time, record the school with the maximum remaining preference to file.
-        // Then set that school's preference in the temp array to -1 so it doesn't show up again.
-        // Yeah, it's O(n^2), but right now I'm focused on getting a functional implementation.
-        for(int j = 0; j < num_schools; j++)
-        {
-            int curmin = 1000000000;
-            int min_index = -1;
-            for(int k = 0; k < num_schools; k++)
-            {
-                if(temp[k] <= curmin)
-                {
-                    curmin = temp[k];
-                    min_index = k;
-                }
-            }
-            if(j != num_schools - 1)
-            {
-                outfile << min_index << ",";
-            }
-            else
-            {
-                outfile << min_index << endl;
-            }
-            temp[min_index] = 1000000000;
-        }
-        free(temp);
+        outfile << endl;
     }
+    delete[] temp;
     outfile << "schools:" << endl;
-    cout << "Beginning writing schools..." << endl;
     for(int i = 0; i < num_schools; i++)
     {
-        cout << "Entering loop: " << i << endl;
         //School current = schools[i];
         /* sort(schools[i].scores, schools[i].scores + num_students);
         cout << "After the sort." << endl;
@@ -320,7 +287,6 @@ void write_schools_and_students(char const *filename)
             }
         }
     }
-    cout << "Closing file..." << endl;
     outfile.close();
 }
 
