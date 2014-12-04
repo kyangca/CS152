@@ -12,6 +12,44 @@ using namespace std;
 
 int **true_preferences = NULL;
 
+/*
+ * Calculates the school utility for a given school s.
+ * School utility is a measure we define as the sum of the scores
+ * school s gives to all of the, say, n students that are matched to 
+ * it in the final matching, divided by the sum of the scores school
+ * s assigns to its top n students, which would be the max possible
+ * sum of scores.
+ *
+ * NOTE: You should only call this method AFTER a matching has been done.
+ * NOTE: priv denotes if you are calculating school utility in private
+ * or non-private case.  priv = false means non-private.
+ */
+double school_utility(int s, bool priv)
+{
+    int num = 0, denom = 0;
+    // I am assuming that the Score *array is sorted in order
+    // of highest scores to lowest.  If that is not the case, then
+    // TODO: Sort scores
+    int j = ((!priv) ? schools[s].enrollment_count : schools[s].private_count.get_count());
+    for(int i = 0; i < j; i++)
+    {
+        denom += schools[s].scores[i].score;
+    }
+    if(denom <= 0) return 0;
+    int *temp = (int *)calloc(num_students, sizeof(int));
+    for(int i = 0; i < num_students; i++)
+    {
+        temp[schools[s].scores[i].student_id] = schools[s].scores[i].score;
+    }
+    for(int i = 0; i < num_students; i++)
+    {
+        if(students[i].current_school == s)
+        {
+            num += temp[i];
+        }
+    }
+    return (num * 1.0 / denom);
+}
 
 // The uniform utility function, with utility proportional to rank
 float utility_uniform(Student &student) {
@@ -189,6 +227,10 @@ int main(int argc, char *argv[], char *envp[]) {
     parse_data(input_file);
     non_private_da_school();
     write_matching_output("output.txt");
+    for(int i = 0; i < num_schools; i++)
+    {
+        cout << "School utility for school " << i << " is: " << school_utility(i, false) << endl;
+    }
     copy_preferences();
     //cout << "Max: " << max_utility_advantage(&non_private_da_school, &utility_uniform) << endl;
     cout << "Max: " << max_random_sampling(&non_private_da_school, &utility_uniform, 1000, 100) << endl;
