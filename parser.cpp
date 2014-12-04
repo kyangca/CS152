@@ -157,6 +157,9 @@ void parse_data(char const *filename) {
         students[i].student_id = i;
         students[i].preferences = new int[num_schools];
         for (j = 0; j < num_schools; j++) {
+            students[i].preferences[j] = 0;
+        }
+        for (j = 0; j < num_schools; j++) {
             if (not getline(line_stream, cell, ',')) {
                 cout << "Error: student " << i << " has too few rankings." << endl;
                 exit(1);
