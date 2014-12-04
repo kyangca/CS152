@@ -2,6 +2,7 @@
 #include <iostream>
 #include <math.h>
 #include <cassert>
+#include <climits>
 #include "private.hpp"
 #include "classes.hpp"
 #include "parser.hpp"
@@ -28,7 +29,7 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
     
     // TODO: take these as input?
-    float epsilon = .0001;
+    float epsilon = 1;
     float delta = .5;
     float beta = 0.01;
 
@@ -117,12 +118,18 @@ void init(float epsilon, float delta, float beta) {
     cout << "initializing schools and students" << endl;
     // delta < 1, otherwise epsilon_prime becomes imaginary
     assert(delta <= 1);
-    
+
+    if (num_schools > INT_MAX / num_students / max_score / num_students) {
+        cout << "Error: overflow!" << endl;
+        exit(EXIT_FAILURE);
+    }
+
     // set up constants
     const int T = num_schools * num_students * max_score;
     const float epsilon_prime = epsilon / (16 * sqrt(2 * num_schools * log(1 / delta)));
     float E = 128 * sqrt(num_schools * log(1 / delta)) / epsilon *
 	log(2 * num_schools / beta) * pow(sqrt(log2(num_students * T)), 5);
+
     cout << "T = " << T << ", e' = " << epsilon_prime << ", E = " << E << endl;
 
     // initialize counters and capacities
