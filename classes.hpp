@@ -30,7 +30,8 @@ public:
     // Constructor/destructor
     Student();
     ~Student();
-    
+    Student(const Student& other);    
+
     // Returns the maximum utility that a student can get while fixing all
     // other preferences. The first argument is the matching algorithm and
     // the second argument is a utility function. The utility function should

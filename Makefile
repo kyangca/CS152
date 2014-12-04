@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -Wall -g
 
-all: private non_private
+all: private non_private datagen
 
 private: private.o classes.o parser.o
 	$(CC) $(CFLAGS) -o private private.o classes.o parser.o
@@ -11,6 +11,12 @@ non_private: parser.o classes.o non_private.o non_private_main.o
 
 classes.o: classes.cpp classes.hpp
 	$(CC) $(CFLAGS) -c classes.cpp
+
+datagen: parser.o classes.o datagen.o
+	$(CC) $(CFLAGS) -o datagen parser.o classes.o datagen.o
+
+datagen.o: datagen.cpp classes.hpp parser.hpp
+	$(CC) $(CFLAGS) -c datagen.cpp
 
 parser.o: parser.cpp classes.hpp
 	$(CC) $(CFLAGS) -c parser.cpp
