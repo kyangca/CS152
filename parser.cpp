@@ -281,7 +281,7 @@ void write_schools_and_students(char const *filename)
     {
         cout << "Entering loop: " << i << endl;
         //School current = schools[i];
-        sort(schools[i].scores, schools[i].scores + num_students);
+        /* sort(schools[i].scores, schools[i].scores + num_students);
         cout << "After the sort." << endl;
         outfile << schools[i].school_id << ":" << schools[i].capacity << ":";
         for(int j = 0; j < num_students; j++)
@@ -295,6 +295,25 @@ void write_schools_and_students(char const *filename)
                 cout << "A\n";
                 outfile << schools[i].scores[j].score << endl;
                 cout << "B\n";
+            }
+        } */
+        outfile << schools[i].school_id << ":" << schools[i].capacity << ":";
+        for(int j = 0; j < num_students; j++)
+        {
+            for(int k = 0; k < num_students; k++)
+            {
+                if(schools[i].scores[k].student_id == j)
+                {
+                    if(j != num_students - 1)
+                    {
+                        outfile << schools[i].scores[k].score << ","; 
+                        break;
+                    }
+                    else
+                    {
+                        outfile << schools[i].scores[k].score << endl;
+                    }
+                }
             }
         }
     }
