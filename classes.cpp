@@ -14,6 +14,17 @@ Student::Student() {
     preferences = new int[num_schools];
 }
 
+// Copy Constructor
+Student::Student(const Student& other) {
+    current_school = other.current_school;
+    student_id = other.student_id;
+    preferences = new int[num_schools];
+    for(int i = 0; i < num_schools; i++)
+    {
+        preferences[i] = other.preferences[i];
+    }
+}
+
 // Desturctor
 Student::~Student() {
     delete[] preferences;
