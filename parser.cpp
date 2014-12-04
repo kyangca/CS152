@@ -47,12 +47,14 @@ void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
         // cdistr.
         current.capacity = cdistr();
         int maxscore = -1;
+        cout << "Generating scores for students..." << endl;
         for(int j = 0; j < num_students; j++)
         {
             // Assign each student a score drawn from sdistr.
             int s = sdistr();
             // Tentatively put this score at the end of the list
             current.scores[j] = Score(j, s);
+            cout << "For school " << current.school_id << " and student " << j << ", generated " << s <<".\n";
             int k = j;
             // "Bubble" the score to its proper place in the list
             //  Yeah, yeah, it's inefficient, but it's also simple to write.
@@ -73,6 +75,7 @@ void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
         // given to students.
         current.threshold = maxscore;
         schools[i] = current;
+        cout << "Capacity is: " << schools[i].capacity << endl;
     }
 }
 
@@ -93,6 +96,7 @@ void gen_students(void)
         // Permute it to get this student's rankings of the available schools.
         random_shuffle(pref, pref + num_schools);
         current.preferences = pref;
+        students[i] = current;
     }
 }
 
@@ -219,21 +223,70 @@ void write_schools_and_students(char const *filename)
     // schools to the start of the file
     outfile << num_students << endl;
     outfile << num_schools << endl;
+    outfile << "students:" << endl;
+    cout << "Beginning writing students..." << endl;
     for(int i = 0; i < num_students; i++)
     {
         Student current = students[i];
-        outfile << current.student_id << ": ";
-        for(int j = 0; j < num_schools - 1; j++)
+        // Make a temporary copy of the preferences
+        int *temp = (int *)calloc(num_schools, sizeof(int));
+        for(int k = 0; k < num_schools; k++)
         {
-            cout << "TODO" << endl;
+            temp[k] = current.preferences[k];
         }
+        outfile << current.student_id << ":";
+        // Do num_school passes through the list of this student's preferences
+        // Each time, record the school with the maximum remaining preference to file.
+        // Then set that school's preference in the temp array to -1 so it doesn't show up again.
+        // Yeah, it's O(n^2), but right now I'm focused on getting a functional implementation.
+        for(int j = 0; j < num_schools; j++)
+        {
+            int curmax = -1;
+            int max_index = -1;
+            for(int k = 0; k < num_schools; k++)
+            {
+                if(temp[k] >= curmax)
+                {
+                    curmax = temp[k];
+                    max_index = k;
+                }
+            }
+            if(j != num_schools - 1)
+            {
+                outfile << max_index << ",";
+            }
+            else
+            {
+                outfile << max_index << endl;
+            }
+            temp[max_index] = -1;
+        }
+        free(temp);
     }
+    outfile << "schools:" << endl;
+    cout << "Beginning writing schools..." << endl;
     for(int i = 0; i < num_schools; i++)
     {
+        cout << "Entering loop: " << i << endl;
         School current = schools[i];
-        outfile << current.school_id << ": " << current.capacity << ", " << current.threshold << ", ";
-        
+        sort(current.scores, current.scores + num_students);
+        cout << "After the sort." << endl;
+        outfile << current.school_id << ":" << current.capacity << ":";
+        for(int j = 0; j < num_students; j++)
+        {
+            if(j != (num_students - 1))
+            {
+                outfile << current.scores[j].score << ",";
+            }
+            else
+            {
+                cout << "A\n";
+                outfile << current.scores[j].score << endl;
+                cout << "B\n";
+            }
+        }
     }
+    cout << "Closing file..." << endl;
     outfile.close();
 }
 
