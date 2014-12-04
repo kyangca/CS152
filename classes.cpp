@@ -6,8 +6,6 @@
 
 using namespace std;
 
-float alpha = 0.25;
-
 // Constructor
 Student::Student() {
     current_school = -1;

@@ -8,6 +8,7 @@ class School;
 class Counter;
 
 extern float alpha;
+extern float eta;
 
 extern int num_students;
 extern int num_schools;

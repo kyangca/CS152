@@ -3,10 +3,15 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
+#include <math.h>
 #include "classes.hpp"
 #include "parser.hpp"
 
 using namespace std;
+
+float alpha = 0.25;
+float eta = 0.2;
+int capacity_bound = -1;
 
 int num_students = -1;
 int num_schools = -1;
@@ -15,11 +20,26 @@ int max_score;
 Student *students = NULL;
 School *schools = NULL;
 
+void compute_capacity_bound() {
+    if (capacity_bound == -1) {
+        capacity_bound = ceil(sqrt(num_schools) * log(num_students) / (eta * alpha));
+        if (capacity_bound > num_students) {
+            cout << "Warning: capacity bound too high: " << capacity_bound << endl;
+            capacity_bound = num_students;
+        }
+    }
+}
+
 // CAPACITY DISTRIBUTIONS
  
 int capacity_uniform(void) {
     return (rand() % num_students) + 1;
 }
+
+int capacity_uniform_above_bound(void) {
+    return (rand() % (num_students-capacity_bound+1)) + capacity_bound;
+}
+
 
 // SCORE DISTRIBUTIONS
 
@@ -55,6 +75,7 @@ void free_memory() {
 void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
 {
     allocate_schools();
+    compute_capacity_bound();
     // Randomly generate num_schools number of schools
     for(int i = 0; i < num_schools; i++)
     {

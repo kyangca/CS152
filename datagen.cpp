@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     num_students = atoi(argv[2]);
     char *outname = argv[3];
     gen_students();
-    gen_schools(&capacity_uniform, &score_uniform);
+    gen_schools(&capacity_uniform_above_bound, &score_uniform);
     write_schools_and_students(outname);
     free_memory();
     return 0;
