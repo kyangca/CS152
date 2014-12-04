@@ -48,6 +48,7 @@ double school_utility(int s, bool priv)
             num += temp[i];
         }
     }
+    free(temp);
     return (num * 1.0 / denom);
 }
 
