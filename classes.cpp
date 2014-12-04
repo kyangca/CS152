@@ -58,21 +58,17 @@ int get_least_bit(int num) {
 }
 
 float lap(float b) {
-    float x = (float)rand() / RAND_MAX * b;
-    float y = (float)rand() / RAND_MAX * b;
-    return log(x / y);
+    return b * log((float)rand() / (float)rand());
 }
 
 Counter::Counter(float epsilon, int length) {
-//    cout << "initializing counter" << endl;
     this->epsilon = epsilon;
     this->length = length;
     time = 0;
     int T = (int)ceil(log2(length));
-    partial_sums = new int[T];
-    noisy_partial_sums = new int[T];
+    partial_sums = new float[T];
+    noisy_partial_sums = new float[T];
     for (int j = 0; j < T; j++) {
-//        cout << "zeroing sum[" << j << "]" << endl;
         partial_sums[j] = 0;
 	noisy_partial_sums[j] = 0;
     }
@@ -93,28 +89,20 @@ Counter::~Counter() {
 
 Counter & Counter::operator=(const Counter &c) {
     if (this != &c) {
-//        cout << "assigning" << endl;
         delete[] partial_sums;
         delete[] noisy_partial_sums;
         epsilon = c.epsilon;
         length = c.length;
         time = c.time;
         int T = (int)ceil(log2(length));
-        partial_sums = new int[T];
-        noisy_partial_sums = new int[T];
+        partial_sums = new float[T];
+        noisy_partial_sums = new float[T];
         for (int j = 0; j < T; j++) {
             partial_sums[j] = c.partial_sums[j];
             noisy_partial_sums[j] = c.noisy_partial_sums[j];
         }
     }
     return *this;
-}
-
-void Counter::print() {
-    for (int j = 0; j < ceil(log2(length)); j++) {
-//        cout << "sum " << j << ": " << partial_sums[j]
-//             << ", noisy sum: " << noisy_partial_sums[j] << endl;
-    }
 }
 
 void Counter::send(float val) {
@@ -137,8 +125,7 @@ void Counter::send(float val) {
 //    cout << "partial sum i: " << partial_sums[i] << endl;
 //    cout << "adding val: " << val << endl;
     partial_sums[i] += val;
-    noisy_partial_sums[i] = partial_sums[i];
-// + lap(log2(length)/epsilon);
+    noisy_partial_sums[i] = partial_sums[i] + lap(log2(length)/epsilon);
 //    cout << "noisy sum " << noisy_partial_sums[i] << endl;
 //    cout << "after: " << get_count() << endl;
 }

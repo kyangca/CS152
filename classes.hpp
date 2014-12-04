@@ -54,13 +54,13 @@ public:
 
 
 class Counter {
-public:
+
     float epsilon;
     int length;
     int time;
-    int *partial_sums;
-    int *noisy_partial_sums;
-
+    float *partial_sums;
+    float *noisy_partial_sums;
+public:
     Counter();
     Counter(float epsilon, int length);
     ~Counter();

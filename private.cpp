@@ -9,28 +9,9 @@
 
 using namespace std;
 
-float lap2(float b) {
-    cout << "running lap" << endl;
-    float x = (float)rand() * b / RAND_MAX;
-    float y = (float)rand() * b / RAND_MAX;
-    cout << x << "," << y << endl;
-    return log(x / y);
-}
-
-void memory_test() {
-    srand(time(NULL));
-    cout << lap2(0.000001) << endl;
-    Counter c(100, 5);
-    for (int i = 0; i < 5; i++) {
-        cout << c.get_count() << endl;
-        c.send(i);
-    }
-    cout << c.get_count() << endl;
-}
 
 int main(int argc, char *argv[]) {
-    memory_test();
-    
+//    test(); exit(1);
     char const *input_file, *output_file;
     if (argc < 2 || argc > 3) {
 	cout << "Usage: private input_file [output_file]" << endl;
@@ -43,10 +24,15 @@ int main(int argc, char *argv[]) {
 	output_file = "output.txt";
     }
     parse_data(input_file);
+
+    srand(time(NULL));
+    
     // TODO: take these as input?
-    float epsilon = .01;
-    float delta = .01;
-    private_da_school(epsilon, delta);
+    float epsilon = .0001;
+    float delta = .5;
+    float beta = 0.01;
+
+    private_da_school(epsilon, delta, beta);
     write_private_matching_output(output_file);
     cout << "Done!" << endl;
 }
@@ -127,19 +113,18 @@ void send_proposals(School &school) {
 }
 
 
-void init(float epsilon, float delta) {
-
-    // TODO: get rid of test values
-    float beta = .01;
-
+void init(float epsilon, float delta, float beta) {
+    cout << "initializing schools and students" << endl;
+    // delta < 1, otherwise epsilon_prime becomes imaginary
+    assert(delta <= 1);
+    
     // set up constants
     const int T = num_schools * num_students * max_score;
     const float epsilon_prime = epsilon / (16 * sqrt(2 * num_schools * log(1 / delta)));
     float E = 128 * sqrt(num_schools * log(1 / delta)) / epsilon *
-	log(2 * num_schools / beta) * pow(sqrt(log(num_students * T)), 5);
+	log(2 * num_schools / beta) * pow(sqrt(log2(num_students * T)), 5);
+    cout << "T = " << T << ", e' = " << epsilon_prime << ", E = " << E << endl;
 
-    E = 0;    // TODO: this shouldn't be here
-    
     // initialize counters and capacities
     for (int j = 0; j < num_schools; j++) {
         // sanity checks
@@ -167,12 +152,13 @@ void init(float epsilon, float delta) {
 }
 
 
-void private_da_school(float epsilon, float delta) {
-    cout << "running private algorithm: epsilon = "
-         << epsilon << ", delta = " << delta << endl;
+void private_da_school(float epsilon, float delta, float beta) {
+    cout << "running private algorithm: epsilon = " << epsilon
+         << ", delta = " << delta
+         << ", beta = " << beta << endl;
 
-    init(epsilon, delta);
-    
+    init(epsilon, delta, beta);
+
     bool some_under_enrolled = true;
     while (some_under_enrolled) {
         some_under_enrolled = false;

@@ -1,2 +1,1 @@
-void private_da_school(float e, float d);
-float counter(float e, int T);
+void private_da_school(float epsilon, float delta, float beta);
