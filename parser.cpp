@@ -55,6 +55,11 @@ void allocate_students() {
     if (students == NULL) {
         students = new Student[num_students];
     }
+    else
+    {
+        delete[] students;
+        students = new Student[num_students];
+    }
 }
 
 void allocate_schools() {
@@ -63,6 +68,11 @@ void allocate_schools() {
         exit(1);
     }
     if (schools == NULL) {
+        schools = new School[num_schools];
+    }
+    else
+    {
+        delete[] schools;
         schools = new School[num_schools];
     }
 }
@@ -220,6 +230,7 @@ void parse_data(char const *filename) {
         schools[i].school_id = i;
         getline(line_stream, cell, ':');
         schools[i].capacity = atoi(cell.c_str());
+        schools[i].private_capacity = schools[i].capacity;
         schools[i].scores = new Score[num_students];
         for (j = 0; j < num_students; j++) {
             if (not getline(line_stream, cell, ',')) {

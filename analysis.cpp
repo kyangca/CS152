@@ -7,6 +7,7 @@
 #include "classes.hpp"
 #include "parser.hpp"
 #include "non_private.hpp"
+#include "private.hpp"
 
 using namespace std;
 
@@ -230,11 +231,40 @@ int main(int argc, char *argv[], char *envp[]) {
     write_matching_output("output.txt");
     for(int i = 0; i < num_schools; i++)
     {
-        cout << "School utility for school " << i << " is: " << school_utility(i, false) << endl;
+        cout << "Non-private school utility for school " << i << " is: " << school_utility(i, false) << endl;
     }
     copy_preferences();
     //cout << "Max: " << max_utility_advantage(&non_private_da_school, &utility_uniform) << endl;
     cout << "Max: " << max_random_sampling(&non_private_da_school, &utility_uniform, 1000, 100) << endl;
+
+    /* Test */
+    // School next_admit enrollment_count private_count
+    // Student 
+    cout << "Test A: " << schools[1].private_capacity << endl;
+    parse_data(input_file);
+    cout << "Test B: " << schools[1].private_capacity << endl;
+    for(int i = 0; i < num_schools; i++)
+    {
+        schools[i].next_admit = 0;
+        schools[i].enrollment_count = 0;
+        schools[i].private_count.reset_count();
+    }
+    for(int i = 0; i < num_students; i++)
+    {
+        students[i].current_school = -1;
+    }
+    float epsilon = 1;
+    float delta = .5;
+    float beta = 0.01;
+
+    private_da_school(epsilon, delta, beta);
+    for(int i = 0; i < num_schools; i++)
+    {
+        cout << "Private school utility for school " << i << " is: " << school_utility(i, true) << endl;
+    }
+    write_private_matching_output("testprivate.txt");
+    /* End test */
+
     deallocate_true_preferences();
     free_memory();
 }

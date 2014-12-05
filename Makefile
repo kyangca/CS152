@@ -12,8 +12,8 @@ private: private.o classes.o parser.o private_main.o
 non_private: parser.o classes.o non_private.o non_private_main.o
 	$(CC) $(CFLAGS) -o non_private classes.o parser.o non_private.o non_private_main.o
 
-analysis: parser.o classes.o non_private.o analysis.o
-	$(CC) $(CFLAGS) -o analysis classes.o parser.o non_private.o analysis.o
+analysis: parser.o classes.o non_private.o analysis.o private.o
+	$(CC) $(CFLAGS) -o analysis classes.o parser.o non_private.o analysis.o private.o
 
 classes.o: classes.cpp classes.hpp
 	$(CC) $(CFLAGS) -c classes.cpp

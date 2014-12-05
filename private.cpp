@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void propose(School &school, Student &student) {
+void private_propose(School &school, Student &student) {
     
     // not currently matched: accept proposal
     if (student.current_school == -1) {
@@ -55,7 +55,7 @@ void propose(School &school, Student &student) {
 }
 
 
-void send_proposals(School &school) {
+void private_send_proposals(School &school) {
     school.threshold--;
     cout << "  under-enrolled! new threshold: " << school.threshold << endl;
     int students_processed = 0;
@@ -68,7 +68,7 @@ void send_proposals(School &school) {
              << school.scores[school.next_admit].student_id
              << ". score: " << school.scores[school.next_admit].score << endl;
                     
-        propose(school, students[school.scores[school.next_admit].student_id]);
+        private_propose(school, students[school.scores[school.next_admit].student_id]);
                     
         school.next_admit++;
         students_processed++;
@@ -155,7 +155,7 @@ void private_da_school(float epsilon, float delta, float beta) {
                  < s.private_capacity)
                 && s.threshold > 0) {
                 some_under_enrolled = true;
-                send_proposals(s);
+                private_send_proposals(s);
             }
         }
     }
