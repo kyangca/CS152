@@ -234,7 +234,8 @@ void parse_data(char const *filename) {
         schools[i].scores = new Score[num_students];
         for (j = 0; j < num_students; j++) {
             if (not getline(line_stream, cell, ',')) {
-                cout << "Error: school " << i << " has too few scores." << endl;
+                cout << "Error: school " << i << " has too few scores (" 
+                     << j << ")." << endl;
                 exit(1);
             }
             score = atoi(cell.c_str());
@@ -254,6 +255,106 @@ void parse_data(char const *filename) {
     
     infile.close();
 }
+
+// In this situation we are going to create a large dataset in which all but
+// 2 students immediately get into their most preferred school. After the
+// first iteration all schools will immediately be at capacity except for
+// one school which will be undernerolled that everyone prefers least.
+// Student 0 will be in the only
+// school they do not prefer less than the underenrolled school. Student 1 will
+// prefer the school student 0 is at. Student 0 can then lie, move into the
+// vacant school, and both student 0 and 1 get moved to their most
+// preferred.
+
+// Some eligable (num_school, num_student) pairs are:
+// (3, 450), (4, 600), (5, 1000), (10, 3500)
+void contrived_example() {
+    int offset;
+    int bound = ceil((1 - alpha) * capacity_bound);
+    // We require 2 schools to be at exactly at this bound, and the rest just
+    // need to be above it. 
+    if (bound * num_schools <= num_students || bound * (num_schools - 1) > num_students) {
+        cout << "Capacity " << capacity_bound << " is not in range for example to work." << endl;
+        free_memory();
+        exit(1);
+    }
+    cout << "Running with capacities: " << bound << endl;
+    
+    // Allocate memory
+    allocate_students();
+    allocate_schools();
+    
+    // Set school capacities
+    for (int i = 0; i < num_schools; i++) {
+        schools[i].capacity = capacity_bound;
+        schools[i].school_id = i;
+    }
+    
+    for (int i = 0; i < num_students; i++) {
+        students[i].student_id = i;
+    }
+    
+    // There are a lot of preferences we will never use, so lets just fill
+    // everything in with dummy values for now.
+    for (int i = 0; i < num_students; i++) {
+        for (int j = 0; j < num_schools; j++) {
+            students[i].preferences[j] = j+1;
+        }
+    }
+   
+    // Now for each school we allocate bound number of students to that
+    // school, for which the students and the schools both get optimal
+    // matchings.
+    
+    for (int i = 0; i < num_schools - 1; i ++) {
+        offset = i * bound;
+        for (int j = 0; j < bound; j++) {
+            students[offset+j].preferences[i] = 1;
+            students[offset+j].preferences[0] = i+1;
+            schools[i].scores[j].student_id = offset+j;
+            schools[i].scores[j].score = 1;
+        }
+    }
+    
+    // Put leftovers in the underenrolled school_id
+    offset = bound * (num_schools - 1);
+    int students_left = num_students - offset;
+    for (int i = 0; i < students_left; i++) {
+        students[offset+i].preferences[num_schools-1] = 1;
+        students[offset+i].preferences[0] = num_schools;
+        schools[num_schools-1].scores[i].student_id = offset+i;
+        schools[num_schools-1].scores[i].score = 1;
+    }
+    for (int i = 0; i < offset; i++) {
+        schools[num_schools-1].scores[students_left+i].student_id = i;
+        schools[num_schools-1].scores[students_left+i].score = 0;
+    }
+
+    // Now generate scores for all of the other students
+    for (int i = 0; i < num_schools - 1; i++) {
+        int lower_bound = i * bound;
+        int upper_bound = (i + 1) * bound;
+        // Iterate over all students below the bound
+        for (int j = 0; j < lower_bound; j++) {
+            schools[i].scores[bound+j].student_id = j;
+            schools[i].scores[bound+j].score = 0;
+        }
+        for (int j = upper_bound; j < num_students; j++) {
+            schools[i].scores[j].student_id = j;
+            schools[i].scores[j].score = 0;
+        }
+    }
+    
+    // Now wreck the first student at two schools
+    schools[0].scores[0].student_id = bound;
+    schools[0].scores[bound].student_id = 0;
+    schools[1].scores[0].student_id = 0;
+    schools[1].scores[bound].student_id = bound;
+    // Tweak the first student to prefer school 1 the second least
+    students[0].preferences[1] = num_schools - 1;
+    students[0].preferences[num_schools - 2] = 2;
+}   
+    
   
 void write_schools_and_students(char const *filename)
 {

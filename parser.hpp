@@ -14,3 +14,6 @@ void free_memory(void);
 int capacity_uniform(void);
 int capacity_uniform_above_bound(void);
 int score_uniform(void);
+
+void contrived_example();
+void compute_capacity_bound();

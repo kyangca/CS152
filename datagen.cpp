@@ -14,9 +14,11 @@ int main(int argc, char **argv)
     srand(time(0));
     num_schools = atoi(argv[1]);
     num_students = atoi(argv[2]);
+    compute_capacity_bound();
     char *outname = argv[3];
-    gen_students();
-    gen_schools(&capacity_uniform_above_bound, &score_uniform);
+    //gen_students();
+    //gen_schools(&capacity_uniform_above_bound, &score_uniform);
+    contrived_example();
     write_schools_and_students(outname);
     free_memory();
     return 0;

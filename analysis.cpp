@@ -219,23 +219,14 @@ float max_random_sampling(void (*matching_algorithm)(), float (*utility)(Student
     return max_advantage;
 }
 
-int main(int argc, char *argv[], char *envp[]) {
-    char const *input_file;
-    if (argc != 2 ) {
-        cout << "Usage: analyze input_file" << endl;
-        exit(1);
-    }
-    input_file = argv[1];
+void school_utility_test(const char *input_file) {
     parse_data(input_file);
     non_private_da_school();
-    write_matching_output("output.txt");
+    //write_matching_output("output.txt");
     for(int i = 0; i < num_schools; i++)
     {
         cout << "Non-private school utility for school " << i << " is: " << school_utility(i, false) << endl;
     }
-    copy_preferences();
-    //cout << "Max: " << max_utility_advantage(&non_private_da_school, &utility_uniform) << endl;
-    cout << "Max: " << max_random_sampling(&non_private_da_school, &utility_uniform, 1000, 100) << endl;
 
     /* Test */
     // School next_admit enrollment_count private_count
@@ -264,7 +255,32 @@ int main(int argc, char *argv[], char *envp[]) {
     }
     write_private_matching_output("testprivate.txt");
     /* End test */
+}
 
+void contrived_example_test(const char *input_file) {
+    int student_id = 0;
+    parse_data(input_file);
+    non_private_da_school();
+    float utility = utility_uniform(students[student_id]);
+    float max_advantage = students[student_id].max_utility(&non_private_da_school, &utility_uniform) - utility;
+    cout << "Max lier advantage for non_private is: " << max_advantage << endl;
+}
+    
+    
+
+int main(int argc, char *argv[], char *envp[]) {
+    char const *input_file;
+    if (argc != 2 ) {
+        cout << "Usage: analyze input_file" << endl;
+        exit(1);
+    }
+    input_file = argv[1];
+    parse_data(input_file);
+    copy_preferences();
+    
+    //school_utility_test(input_file);
+    contrived_example_test(input_file);
+        
     deallocate_true_preferences();
     free_memory();
 }
