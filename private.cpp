@@ -15,11 +15,11 @@ void propose(School &school, Student &student) {
     // not currently matched: accept proposal
     if (student.current_school == -1) {
         
-        cout << "      accept: was not enrolled" << endl;
-        cout << "      sending 1 to school " << school.school_id << endl;
+//        cout << "      accept: was not enrolled" << endl;
+//        cout << "      sending 1 to school " << school.school_id << endl;
         school.private_count.send(1);
         // send 0 to all other counters
-        cout << "      sending 0 to other schools" << endl;
+//        cout << "      sending 0 to other schools" << endl;
         for (int j1 = 0; j1 < num_schools; j1++) {
             if (schools[j1].school_id != school.school_id) {
                 schools[j1].private_count.send(0);
@@ -31,7 +31,7 @@ void propose(School &school, Student &student) {
     // already matched but prefer this school: accept proposal
     else if (student.preferences[school.school_id]
                < student.preferences[student.current_school]) {
-        cout << "      accept: switching schools" << endl;
+//        cout << "      accept: switching schools" << endl;
         school.private_count.send(1);
         schools[student.current_school].private_count.send(-1);
         // send 0 to all other counters
@@ -46,7 +46,7 @@ void propose(School &school, Student &student) {
     
     // prefer current match: reject proposal
     else {
-        cout << "      reject" << endl;
+//        cout << "      reject" << endl;
         // send 0 to all counters
         for (int j1 = 0; j1 < num_schools; j1++) {
             schools[j1].private_count.send(0);
@@ -57,16 +57,16 @@ void propose(School &school, Student &student) {
 
 void send_proposals(School &school) {
     school.threshold--;
-    cout << "  under-enrolled! new threshold: " << school.threshold << endl;
+//    cout << "  under-enrolled! new threshold: " << school.threshold << endl;
     int students_processed = 0;
 
     // loop through newly eligible students
     while (school.next_admit < num_students &&
            school.threshold <= school.scores[school.next_admit].score) {
         
-        cout << "    proposing to student "
-             << school.scores[school.next_admit].student_id
-             << ". score: " << school.scores[school.next_admit].score << endl;
+//        cout << "    proposing to student "
+//             << school.scores[school.next_admit].student_id
+//             << ". score: " << school.scores[school.next_admit].score << endl;
                     
         propose(school, students[school.scores[school.next_admit].student_id]);
                     
@@ -74,7 +74,7 @@ void send_proposals(School &school) {
         students_processed++;
     }
     
-    cout << "      sending 0 to each school for remaining students" << endl;
+//    cout << "      sending 0 to each school for remaining students" << endl;
     // send 0 to all counters for all students not just considered
     for (int i = students_processed; i < num_students; i++) {
         for (int j1 = 0; j1 < num_schools; j1++) {
@@ -99,7 +99,7 @@ void init(float epsilon, float delta, float beta) {
     const int T = num_schools * num_students * max_score;
     const float epsilon_prime = epsilon / (16 * sqrt(2 * num_schools * log(1 / delta)));
     float E = 128 * sqrt(num_schools * log(1 / delta)) / epsilon *
-	log(2 * num_schools / beta) * pow(sqrt(log2(num_students * T)), 5);
+	log(2 * num_schools / beta) * pow(sqrt(log2(T)), 5);
 
     cout << "T = " << T << ", e' = " << epsilon_prime << ", E = " << E << endl;
 
@@ -109,7 +109,7 @@ void init(float epsilon, float delta, float beta) {
         assert(schools[j].threshold == max_score);
 	assert(schools[j].capacity > 0);
 
-        schools[j].private_count = Counter(epsilon_prime, num_students * T);
+        schools[j].private_count = Counter(epsilon_prime, T);
 	schools[j].private_capacity = schools[j].capacity - E;
 
 	// could get rid of this check once we're sure it's consistent
@@ -144,11 +144,11 @@ void private_da_school(float epsilon, float delta, float beta) {
         for (int j = 0; j < num_schools; j++) { // for each school
             School &s = schools[j];
             
-            cout << "processing school " << j << endl;
-            cout << "  threshold: " << s.threshold << endl;
-            cout << "  private count: " << s.private_count.get_count() << endl;
-            cout << "  private capacity: " << s.private_capacity << endl;
-            cout << "  capacity: " << s.capacity << endl;
+//            cout << "processing school " << j << endl;
+//            cout << "  threshold: " << s.threshold << endl;
+//            cout << "  private count: " << s.private_count.get_count() << endl;
+//            cout << "  private capacity: " << s.private_capacity << endl;
+//            cout << "  capacity: " << s.capacity << endl;
 
             // if under-enrolled
             if ((s.private_count.get_count()
