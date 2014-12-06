@@ -7,11 +7,51 @@
 #include "classes.hpp"
 #include "parser.hpp"
 #include "non_private.hpp"
+#include "private.hpp"
 
 using namespace std;
 
 int **true_preferences = NULL;
 
+/*
+ * Calculates the school utility for a given school s.
+ * School utility is a measure we define as the sum of the scores
+ * school s gives to all of the, say, n students that are matched to 
+ * it in the final matching, divided by the sum of the scores school
+ * s assigns to its top n students, which would be the max possible
+ * sum of scores.
+ *
+ * NOTE: You should only call this method AFTER a matching has been done.
+ * NOTE: priv denotes if you are calculating school utility in private
+ * or non-private case.  priv = false means non-private.
+ */
+double school_utility(int s, bool priv)
+{
+    int num = 0, denom = 0;
+    // I am assuming that the Score *array is sorted in order
+    // of highest scores to lowest.  If that is not the case, then
+    // TODO: Sort scores
+    int j = ((!priv) ? schools[s].enrollment_count : schools[s].private_count.get_count());
+    for(int i = 0; i < j; i++)
+    {
+        denom += schools[s].scores[i].score;
+    }
+    if(denom <= 0) return 0;
+    int *temp = (int *)calloc(num_students, sizeof(int));
+    for(int i = 0; i < num_students; i++)
+    {
+        temp[schools[s].scores[i].student_id] = schools[s].scores[i].score;
+    }
+    for(int i = 0; i < num_students; i++)
+    {
+        if(students[i].current_school == s)
+        {
+            num += temp[i];
+        }
+    }
+    free(temp);
+    return (num * 1.0 / denom);
+}
 
 // The uniform utility function, with utility proportional to rank
 float utility_uniform(Student &student) {
@@ -142,7 +182,7 @@ float max_utility_advantage(void (*matching_algorithm)(), float (*utility)(Stude
 // new student preferences and determines the maximum advantage that any
 // one can gain by lieing in any of the sampled preferences.
 float max_random_sampling(void (*matching_algorithm)(), float (*utility)(Student&),
-                          int samp_size, int num_iter) {
+                          int samp_size, int student_iters, int school_iters) {
     samp_size = min(samp_size, num_students);
     // Get a random sample of students
     int *sample = new int[samp_size];
@@ -157,27 +197,80 @@ float max_random_sampling(void (*matching_algorithm)(), float (*utility)(Student
     float max_advantage = 0.0;
     int *original_preferences = new int[num_schools];
     // For each iteration...
-    for (int i = 0; i < num_iter; i++) {
-        // Generate a new sample of student preferences
-        gen_students();
-        
-        // For each student in the sample
-        for (int j = 0; j < samp_size; j++) {
-            // Save their preferences from this set and load their true ones
-            memcpy(original_preferences, students[sample[j]].preferences, sizeof(int)*num_schools);
-            memcpy(students[sample[j]].preferences, true_preferences[sample[j]], sizeof(int)*num_schools);
-            // Get their truthful utility
-            reset_state();
-            matching_algorithm();
-            float true_utility = utility(students[sample[j]]);
-            // Now find the largest advantage for this student
-            max_advantage = max(max_advantage, students[sample[j]].max_utility(matching_algorithm, utility) - true_utility);
-            // Return the student's preferences back to normal
-            memcpy(students[sample[j]].preferences, original_preferences, sizeof(int)*num_schools);
+    for (int k = 0; k < school_iters; k++) {
+        for (int i = 0; i < student_iters; i++) {
+            // For each student in the sample
+            for (int j = 0; j < samp_size; j++) {
+                // Save their preferences from this set and load their true ones
+                memcpy(original_preferences, students[sample[j]].preferences, sizeof(int)*num_schools);
+                memcpy(students[sample[j]].preferences, true_preferences[sample[j]], sizeof(int)*num_schools);
+                // Get their truthful utility
+                reset_state();
+                matching_algorithm();
+                float true_utility = utility(students[sample[j]]);
+                // Now find the largest advantage for this student
+                max_advantage = max(max_advantage, students[sample[j]].max_utility(matching_algorithm, utility) - true_utility);
+                // Return the student's preferences back to normal
+                memcpy(students[sample[j]].preferences, original_preferences, sizeof(int)*num_schools);
+            }
+            // Generate a new sample of student preferences
+            gen_students();
         }
+        // Generate a new sample of school preferences
+        //gen_schools(&capacity_uniform_limited, &score_uniform);
     }
+    delete[] original_preferences;
     return max_advantage;
 }
+
+void school_utility_test(const char *input_file) {
+    parse_data(input_file);
+    non_private_da_school();
+    //write_matching_output("output.txt");
+    for(int i = 0; i < num_schools; i++)
+    {
+        cout << "Non-private school utility for school " << i << " is: " << school_utility(i, false) << endl;
+    }
+
+    /* Test */
+    // School next_admit enrollment_count private_count
+    // Student 
+    cout << "Test A: " << schools[1].private_capacity << endl;
+    parse_data(input_file);
+    cout << "Test B: " << schools[1].private_capacity << endl;
+    for(int i = 0; i < num_schools; i++)
+    {
+        schools[i].next_admit = 0;
+        schools[i].enrollment_count = 0;
+        schools[i].private_count.reset_count();
+    }
+    for(int i = 0; i < num_students; i++)
+    {
+        students[i].current_school = -1;
+    }
+    float epsilon = 1;
+    float delta = .5;
+    float beta = 0.01;
+
+    private_da_school(epsilon, delta, beta);
+    for(int i = 0; i < num_schools; i++)
+    {
+        cout << "Private school utility for school " << i << " is: " << school_utility(i, true) << endl;
+    }
+    write_private_matching_output("testprivate.txt");
+    /* End test */
+}
+
+void contrived_example_test(const char *input_file) {
+    int student_id = 0;
+    parse_data(input_file);
+    non_private_da_school();
+    float utility = utility_uniform(students[student_id]);
+    float max_advantage = students[student_id].max_utility(&non_private_da_school, &utility_uniform) - utility;
+    cout << "Max liar advantage for non-private is: " << max_advantage << endl;
+}
+    
+    
 
 int main(int argc, char *argv[], char *envp[]) {
     char const *input_file;
@@ -187,11 +280,14 @@ int main(int argc, char *argv[], char *envp[]) {
     }
     input_file = argv[1];
     parse_data(input_file);
-    non_private_da_school();
-    write_matching_output("output.txt");
     copy_preferences();
-    //cout << "Max: " << max_utility_advantage(&non_private_da_school, &utility_uniform) << endl;
-    cout << "Max: " << max_random_sampling(&non_private_da_school, &utility_uniform, 1000, 100) << endl;
+    srand(time(0));
+    //school_utility_test(input_file);
+    //contrived_example_test(input_file);
+    //non_private_da_school();
+    //cout << "Max:" << max_utility_advantage(&non_private_da_school, &utility_uniform) << endl;
+    cout << "Max from sampling :" << max_random_sampling(&non_private_da_school, &utility_uniform, 500, 100, 1) << endl;
+        
     deallocate_true_preferences();
     free_memory();
 }
