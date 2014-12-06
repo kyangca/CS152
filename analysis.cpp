@@ -182,7 +182,7 @@ float max_utility_advantage(void (*matching_algorithm)(), float (*utility)(Stude
 // new student preferences and determines the maximum advantage that any
 // one can gain by lieing in any of the sampled preferences.
 float max_random_sampling(void (*matching_algorithm)(), float (*utility)(Student&),
-                          int samp_size, int num_iter) {
+                          int samp_size, int student_iters, int school_iters) {
     samp_size = min(samp_size, num_students);
     // Get a random sample of students
     int *sample = new int[samp_size];
@@ -197,25 +197,29 @@ float max_random_sampling(void (*matching_algorithm)(), float (*utility)(Student
     float max_advantage = 0.0;
     int *original_preferences = new int[num_schools];
     // For each iteration...
-    for (int i = 0; i < num_iter; i++) {
-        // Generate a new sample of student preferences
-        gen_students();
-        
-        // For each student in the sample
-        for (int j = 0; j < samp_size; j++) {
-            // Save their preferences from this set and load their true ones
-            memcpy(original_preferences, students[sample[j]].preferences, sizeof(int)*num_schools);
-            memcpy(students[sample[j]].preferences, true_preferences[sample[j]], sizeof(int)*num_schools);
-            // Get their truthful utility
-            reset_state();
-            matching_algorithm();
-            float true_utility = utility(students[sample[j]]);
-            // Now find the largest advantage for this student
-            max_advantage = max(max_advantage, students[sample[j]].max_utility(matching_algorithm, utility) - true_utility);
-            // Return the student's preferences back to normal
-            memcpy(students[sample[j]].preferences, original_preferences, sizeof(int)*num_schools);
+    for (int k = 0; k < school_iters; k++) {
+        for (int i = 0; i < student_iters; i++) {
+            // For each student in the sample
+            for (int j = 0; j < samp_size; j++) {
+                // Save their preferences from this set and load their true ones
+                memcpy(original_preferences, students[sample[j]].preferences, sizeof(int)*num_schools);
+                memcpy(students[sample[j]].preferences, true_preferences[sample[j]], sizeof(int)*num_schools);
+                // Get their truthful utility
+                reset_state();
+                matching_algorithm();
+                float true_utility = utility(students[sample[j]]);
+                // Now find the largest advantage for this student
+                max_advantage = max(max_advantage, students[sample[j]].max_utility(matching_algorithm, utility) - true_utility);
+                // Return the student's preferences back to normal
+                memcpy(students[sample[j]].preferences, original_preferences, sizeof(int)*num_schools);
+            }
+            // Generate a new sample of student preferences
+            gen_students();
         }
+        // Generate a new sample of school preferences
+        //gen_schools(&capacity_uniform_limited, &score_uniform);
     }
+    delete[] original_preferences;
     return max_advantage;
 }
 
@@ -263,7 +267,7 @@ void contrived_example_test(const char *input_file) {
     non_private_da_school();
     float utility = utility_uniform(students[student_id]);
     float max_advantage = students[student_id].max_utility(&non_private_da_school, &utility_uniform) - utility;
-    cout << "Max lier advantage for non_private is: " << max_advantage << endl;
+    cout << "Max liar advantage for non-private is: " << max_advantage << endl;
 }
     
     
@@ -277,9 +281,12 @@ int main(int argc, char *argv[], char *envp[]) {
     input_file = argv[1];
     parse_data(input_file);
     copy_preferences();
-    
+    srand(time(0));
     //school_utility_test(input_file);
-    contrived_example_test(input_file);
+    //contrived_example_test(input_file);
+    //non_private_da_school();
+    //cout << "Max:" << max_utility_advantage(&non_private_da_school, &utility_uniform) << endl;
+    cout << "Max from sampling :" << max_random_sampling(&non_private_da_school, &utility_uniform, 500, 100, 1) << endl;
         
     deallocate_true_preferences();
     free_memory();

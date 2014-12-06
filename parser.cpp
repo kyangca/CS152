@@ -15,11 +15,14 @@ int capacity_bound = -1;
 
 int num_students = -1;
 int num_schools = -1;
-int max_score;
+int max_score = 0.0;
 
 Student *students = NULL;
 School *schools = NULL;
 
+// Computes the bound as stated in the informal theorem. This is apparently
+// incorrect as the private algorithm has the log to the 5th power and a huge
+// constant factor.
 void compute_capacity_bound() {
     if (capacity_bound == -1) {
         capacity_bound = ceil(sqrt(num_schools) * log(num_students) / (eta * alpha));
@@ -35,6 +38,12 @@ void compute_capacity_bound() {
 int capacity_uniform(void) {
     return (rand() % num_students) + 1;
 }
+
+int capacity_uniform_limited(void) {
+    int lower_bound = floor(num_students/(num_schools*2));
+    return (rand() % (num_students/2-lower_bound)) + lower_bound;
+}
+
 
 int capacity_uniform_above_bound(void) {
     return (rand() % (num_students-capacity_bound+1)) + capacity_bound;
@@ -55,11 +64,6 @@ void allocate_students() {
     if (students == NULL) {
         students = new Student[num_students];
     }
-    else
-    {
-        delete[] students;
-        students = new Student[num_students];
-    }
 }
 
 void allocate_schools() {
@@ -68,11 +72,6 @@ void allocate_schools() {
         exit(1);
     }
     if (schools == NULL) {
-        schools = new School[num_schools];
-    }
-    else
-    {
-        delete[] schools;
         schools = new School[num_schools];
     }
 }
@@ -101,10 +100,12 @@ void gen_schools(int (*cdistr)(void), int (*sdistr)(void))
             // Assign each student a score drawn from sdistr.
             int s = sdistr();
             // Tentatively put this score at the end of the list
-            schools[i].scores[j] = Score(j, s);
+            schools[i].scores[j].student_id = j;
+            schools[i].scores[j].score = s;
             //cout << "For school " << schools[i].school_id << " and student " << j << ", generated " << s <<".\n";
             sort(schools[i].scores, schools[i].scores + num_students);
             maxscore = max(s, maxscore);
+            max_score = max(s, max_score);
         }
         // Set initial threshold to the max of all the scores this school has
         // given to students.
