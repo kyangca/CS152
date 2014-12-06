@@ -9,7 +9,6 @@ using namespace std;
 
 
 int main(int argc, char *argv[]) {
-//    test(); exit(1);
     char const *input_file, *output_file;
     if (argc < 2 || argc > 3) {
     cout << "Usage: private input_file [output_file]" << endl;

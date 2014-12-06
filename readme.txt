@@ -2,7 +2,7 @@ make produces 4 executables which can be run in this way:
 
 ./datagen num_schools num_students output_file
 ./non_private input_file [output_file]
-./private
+./private input_file [output_file]
 ./analysis input_file
 
 datagen generates data, although currently the distributions need to be changed
@@ -11,7 +11,7 @@ in the code.
 non_private runs the non-private algorithm. If an output file is not specified
 it writes the resulting matching and thresholds into "output.txt".
 
-private runs the private algorithm.
+private runs the private algorithm, with the parameters given in private_main.cpp
 
 analysis runs various tests on the preferences specified by the input file. It
 makes little sense without altering the code.
